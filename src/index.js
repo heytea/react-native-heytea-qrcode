@@ -1,5 +1,5 @@
 "use strict";
 import { NativeModules } from "react-native";
-const { QRCodeScan } = NativeModules;
+const { HeyTeaQRCode } = NativeModules;
 
-export default QRCodeScan
+export default HeyTeaQRCode

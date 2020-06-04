@@ -11,7 +11,7 @@
 
 @implementation RCTQRCodeScan
 
-RCT_EXPORT_MODULE();
+RCT_EXPORT_MODULE(HeyTeaQRCode);
 
 - (dispatch_queue_t)methodQueue {
     return dispatch_get_main_queue();
