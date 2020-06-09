@@ -1,1 +1,10 @@
-export function scanQRCode():void
+export interface ScanResult {
+    result: string;
+    scanType: string;
+}
+
+/**
+ * 扫码哦
+ * @returns {Promise<ScanResult | null>} 扫码结果
+ */
+export function scanQRCode(): Promise<ScanResult | null>;
