@@ -1,1 +1,1 @@
-export function scanQRCode():void
+export function iOSScanQRCode():Promise<any>
