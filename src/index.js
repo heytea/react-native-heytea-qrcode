@@ -1,20 +1,21 @@
 "use strict";
-import { NativeModules,NativeEventEmitter } from "react-native";
+import { NativeModules,NativeEventEmitter,Platform } from "react-native";
 const { HeyTeaQRCode } = NativeModules;
 const QRCodeManagerEmitter = new NativeEventEmitter(HeyTeaQRCode);
 
-export const iOSScanQRCode = () => {
-
+export const scanQRCode = () => {
     const {scanQRCode} = HeyTeaQRCode
-    scanQRCode()
-    return new Promise((resolve) => {
-        QRCodeManagerEmitter.addListener(
-            'ScanQRCodeInfoNotification',
-            info => {
-              const { qrCodeResult } = info;
-              resolve(qrCodeResult)
-            },
-          );
-    })
-
+    if (Platform.OS === 'android') {
+      return scanQRCode()
+    }else {
+        scanQRCode()
+        return new Promise((resolve) => {
+            QRCodeManagerEmitter.addListener(
+                'ScanQRCodeInfoNotification',
+                info => {
+                  resolve(info)
+                },
+              );
+        })
+    }
 }
