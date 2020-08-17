@@ -68,7 +68,7 @@
         if (result) {
             [obtain stopRunning];
             [obtain playSoundName:@"ding.wav"];
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"QRCodeInfoNotification" object:nil userInfo:@{@"qrCodeInfo":result}];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"QRCodeInfoNotification" object:nil userInfo:@{@"result":result,@"scanType":@"QR_CODE"}];
             [weakSelf.navigationController popViewControllerAnimated:YES];
         }
     }];
@@ -120,7 +120,7 @@
                 [MBProgressHUD HT_showMBProgressHUDWithOnlyMessage:@"未发现二维码" delayTime:1.8];
             });
         } else {
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"QRCodeInfoNotification" object:nil userInfo:@{@"qrCodeInfo":result}];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"QRCodeInfoNotification" object:nil userInfo:@{@"result":result,@"scanType":@"QR_CODE"}];
             [weakSelf.navigationController popViewControllerAnimated:YES];
         }
 

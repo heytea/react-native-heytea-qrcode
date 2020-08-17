@@ -10,9 +10,14 @@ yarn add @heytea/react-native-heytea-qrcode
 use
 
 ```js
+export interface ScanResult {
+    result: string;
+    scanType: string;
+}
+
 /**
  * 扫码哦
- * @returns {Promise<string>} 扫码结果
+ * @returns {Promise<ScanResult | null>} 扫码结果
  */
-export function scanQRCode(): Promise<string>;
+export function scanQRCode(): Promise<ScanResult | null>;
 ```

@@ -34,9 +34,7 @@ RCT_EXPORT_MODULE(HeyTeaQRCode);
 }
 
 - (void)sendEventWithInfo:(NSNotification *)notification {
-
-    NSString *info = notification.userInfo[@"qrCodeInfo"];
-    [self sendEventWithName:@"ScanQRCodeInfoNotification" body:@{@"qrCodeResult":info}];
+    [self sendEventWithName:@"ScanQRCodeInfoNotification" body:notification.userInfo];
 }
 
 //扫码
