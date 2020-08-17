@@ -104,11 +104,7 @@ public class RNHeyteaQRCodeModule extends ReactContextBaseJavaModule {
     public void scanQRCode(Promise promise) {
         if (getCurrentActivity() != null) {
             if (ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                promise.reject(new Throwable("没有相机权限"));
-                return;
-            }
-            if (ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                promise.reject(new Throwable("没有访问外部目录的权限"));
+                promise.reject(new Throwable("No camera permission"));
                 return;
             }
             sPromise = promise;

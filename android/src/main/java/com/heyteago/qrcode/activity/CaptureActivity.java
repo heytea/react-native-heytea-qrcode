@@ -1,5 +1,6 @@
 package com.heyteago.qrcode.activity;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -21,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.LinearLayoutCompat;
@@ -47,13 +49,16 @@ import com.heyteago.qrcode.view.ViewfinderView;
 
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
+
+import pub.devrel.easypermissions.EasyPermissions;
 
 
 /**
  * Initial the camera
  **/
-public class CaptureActivity extends AppCompatActivity implements Callback, View.OnClickListener {
+public class CaptureActivity extends AppCompatActivity implements Callback, View.OnClickListener, EasyPermissions.PermissionCallbacks {
 
     private static final int REQUEST_CODE_SCAN_GALLERY = 100;
 
@@ -409,10 +414,38 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
      * 相册选择图片
      */
     private void selectPhoto() {
+        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            navigatePhoto();
+        } else {
+            EasyPermissions.requestPermissions(this, "Select QRCode pic need storage permission", 0x666, perms);
+        }
+    }
+
+    private void navigatePhoto() {
         Intent innerIntent = new Intent(Intent.ACTION_GET_CONTENT); // "android.intent.action.GET_CONTENT"
         innerIntent.setType("image/*");
-        Intent wrapperIntent = Intent.createChooser(innerIntent, "选择二维码图片");
+        Intent wrapperIntent = Intent.createChooser(innerIntent, "Select QRCode pic");
         startActivityForResult(wrapperIntent, REQUEST_CODE_SCAN_GALLERY);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if (requestCode == 0x666) {
+            navigatePhoto();
+        }
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+
+    }
 }

@@ -73,7 +73,8 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    compile 'com.google.zxing:core:3.3.2'
+    implementation 'com.google.zxing:core:3.3.2'
+    implementation 'pub.devrel:easypermissions:3.0.0'
 }
 
 def configureReactNativePom(def pom) {
