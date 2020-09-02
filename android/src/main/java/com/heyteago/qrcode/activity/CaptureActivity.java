@@ -47,10 +47,13 @@ import com.heyteago.qrcode.decoding.InactivityTimer;
 import com.heyteago.qrcode.decoding.RGBLuminanceSource;
 import com.heyteago.qrcode.view.ViewfinderView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -179,6 +182,15 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
         if (TextUtils.isEmpty(path)) {
             return null;
         }
+        String reg = ".+(.jpg|.bmp|.jpeg|.png|.gif|.JPG|.BMP|.JPEG|.PNG|.GIF)$";
+        Pattern pattern = Pattern.compile(reg);
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            return null;
+        }
+        if (!new File(path).exists()) {
+            return null;
+        }
         Hashtable<DecodeHintType, String> hints = new Hashtable<>();
         hints.put(DecodeHintType.CHARACTER_SET, "UTF8"); //设置二维码内容的编码
 
@@ -232,16 +244,16 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     @Override
     protected void onPause() {
         super.onPause();
-        if (handler != null) {
-            handler.quitSynchronously();
-            handler = null;
-        }
-        CameraManager.get().closeDriver();
     }
 
     @Override
     protected void onDestroy() {
         inactivityTimer.shutdown();
+        if (handler != null) {
+            handler.quitSynchronously();
+            handler = null;
+        }
+        CameraManager.get().closeDriver();
         super.onDestroy();
     }
 
