@@ -152,10 +152,12 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
                                 finish();
                             } else {
                                 mProgress.dismiss();
-                                Message m = handler.obtainMessage();
-                                m.what = R.id.decode_failed;
-                                m.obj = "Scan failed!";
-                                handler.sendMessage(m);
+                                if (handler != null) {
+                                    Message m = handler.obtainMessage();
+                                    m.what = R.id.decode_failed;
+                                    m.obj = "Scan failed!";
+                                    handler.sendMessage(m);
+                                }
                             }
                         }
                     }).start();
