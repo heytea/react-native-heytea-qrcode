@@ -36,7 +36,12 @@ public class Utils {
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private static String getRealPathFromUri_AboveApi19(Context context, Uri uri) {
         String filePath = null;
-        String wholeID = DocumentsContract.getDocumentId(uri);
+        String wholeID;
+        try {
+            wholeID = DocumentsContract.getDocumentId(uri);
+        } catch (Exception e) {
+            return null;
+        }
 
         // 使用':'分割
         String[] ids = wholeID.split(":");
