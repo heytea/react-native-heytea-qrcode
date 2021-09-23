@@ -428,7 +428,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
      * 相册选择图片
      */
     private void selectPhoto() {
-        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE};
         if (EasyPermissions.hasPermissions(this, perms)) {
             navigatePhoto();
         } else {
