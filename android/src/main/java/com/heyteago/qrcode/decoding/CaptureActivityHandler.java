@@ -130,7 +130,12 @@ public final class CaptureActivityHandler extends Handler {
     if (state == State.SUCCESS) {
       state = State.PREVIEW;
       CameraManager.get().requestPreviewFrame(decodeThread.getHandler(), R.id.decode);
-      CameraManager.get().requestAutoFocus(this, R.id.auto_focus);
+      postDelayed(new Runnable() {
+        @Override
+        public void run() {
+          CameraManager.get().requestAutoFocus(CaptureActivityHandler.this, R.id.auto_focus);
+        }
+      }, 200);
       activity.drawViewfinder();
     }
   }
