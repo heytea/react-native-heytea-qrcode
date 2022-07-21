@@ -457,6 +457,6 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
 
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-
+      Toast.makeText(this, "从相册选择需要读取存储权限", Toast.LENGTH_SHORT).show();
     }
 }
