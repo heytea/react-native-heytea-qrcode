@@ -67,7 +67,6 @@
     [obtain setBlockWithQRCodeObtainScanResult:^(SGQRCodeObtain *obtain, NSString *result) {
         if (result) {
             [obtain stopRunning];
-            [obtain playSoundName:@"ding.wav"];
             [[NSNotificationCenter defaultCenter] postNotificationName:@"QRCodeInfoNotification" object:nil userInfo:@{@"result":result,@"scanType":@"QR_CODE"}];
             [weakSelf.navigationController popViewControllerAnimated:YES];
         }
