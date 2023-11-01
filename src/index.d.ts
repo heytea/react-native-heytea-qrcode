@@ -7,4 +7,4 @@ export interface ScanResult {
  * 扫码哦
  * @returns {Promise<ScanResult | null>} 扫码结果
  */
-export function scanQRCode(): Promise<ScanResult | null>;
+export function scanQRCode(lang:string): Promise<ScanResult | null>;
