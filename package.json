@@ -1,7 +1,7 @@
 {
   "name": "@heytea/react-native-heytea-qrcode",
   "title": "React Native Heytea Utils",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "@heytea/react-native-heytea-qrcode",
   "main": "src/index.js",
   "files": [
