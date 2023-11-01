@@ -101,7 +101,7 @@ public class RNHeyteaQRCodeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void scanQRCode(Promise promise) {
+    public void scanQRCode(String lang,Promise promise) {
         if (getCurrentActivity() != null) {
             if (ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 promise.reject(new Throwable("No camera permission"));
