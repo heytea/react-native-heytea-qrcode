@@ -11,6 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface HQRCodeVc : UIViewController
+@property(nonatomic,strong)NSString *lang;
 
 @end
 

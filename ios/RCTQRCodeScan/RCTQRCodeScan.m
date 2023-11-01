@@ -38,9 +38,11 @@ RCT_EXPORT_MODULE(HeyTeaQRCode);
 }
 
 //扫码
-RCT_EXPORT_METHOD(scanQRCode) {
+RCT_EXPORT_METHOD(scanQRCode:(NSString *)lang) {
 
     HQRCodeVc *qrVc = [[HQRCodeVc alloc] init];
+    qrVc.lang = lang;
+    
     [[RCTQRCodeScan getRootNavVc] pushViewController:qrVc animated:YES];
 
 }
