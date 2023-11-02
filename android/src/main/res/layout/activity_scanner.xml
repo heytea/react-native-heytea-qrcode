@@ -37,7 +37,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="扫描二维码"
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
@@ -88,7 +87,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:gravity="center"
-                    android:text="打开闪光灯"
                     android:textColor="#ffffff" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -109,12 +107,11 @@
                     app:srcCompat="@drawable/ic_photo" />
 
                 <TextView
+                    android:id="@+id/tv_album"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:gravity="center"
-                    android:text="相册"
-
                     android:textColor="#ffffff" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 

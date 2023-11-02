@@ -1,18 +1,24 @@
 package com.heyteago.qrcode.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -27,6 +33,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
@@ -38,6 +45,7 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
 import com.heyteago.qrcode.Constants;
+import com.heyteago.qrcode.LangUtil;
 import com.heyteago.qrcode.R;
 import com.heyteago.qrcode.RNHeyteaQRCodeModule;
 import com.heyteago.qrcode.Utils;
@@ -56,6 +64,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import pub.devrel.easypermissions.EasyPermissions;
+import pub.devrel.easypermissions.PermissionRequest;
 
 
 /**
@@ -83,9 +92,18 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     private LinearLayoutCompat albumLayout; // 打开相册
     private AppCompatImageView flashLightIv; // 闪光灯图片
     private TextView flashLightTv;// 闪光灯文字
+    private TextView albumTv;// 闪光灯文字
 
     private boolean isFlashOn = false;
 
+    private String[] curPerms = {Manifest.permission.READ_EXTERNAL_STORAGE};//申请权限
+
+    //第一次申请权限
+    private static String Key_PermissionFirstApplyFor = "firstApplyFor";
+    //是否被永久拒决申请权限
+    private static String Key_PermissionPermanentlyDenied = "PermissionPermanentlyDenied";
+
+    private String lang = Constants.EN_US;
 
     /**
      * Called when the activity is first created.
@@ -93,8 +111,8 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_scanner);
+        lang = getIntent().getStringExtra(Constants.LANG) == null ? Constants.EN_US : getIntent().getStringExtra(Constants.LANG);
         CameraManager.init(getApplication());
         viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_content);
         flashLightLayout = (LinearLayoutCompat) findViewById(R.id.flashLightLayout);
@@ -102,18 +120,24 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
         back = (ImageButton) findViewById(R.id.btn_back);
         flashLightIv = findViewById(R.id.flashLightIv);
         flashLightTv = findViewById(R.id.flashLightTv);
+        albumTv = findViewById(R.id.tv_album);
         flashLightLayout.setOnClickListener(this);
         albumLayout.setOnClickListener(this);
         back.setOnClickListener(this);
         hasSurface = false;
         inactivityTimer = new InactivityTimer(this);
 
+        viewfinderView.setLabelText(LangUtil.getString(lang, "qr_barcode_scanning"));
+        flashLightTv.setText(LangUtil.getString(lang, "open_flash_light"));
+        albumTv.setText(LangUtil.getString(lang, "album"));
         //添加toolbar
         addToolbar();
     }
 
     private void addToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        TextView titleTv = findViewById(R.id.txt_title);
+        titleTv.setText(LangUtil.getString(lang, "scan_qrcode"));
         setSupportActionBar(toolbar);
     }
 
@@ -133,7 +157,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
                     //获取选中图片的路径
                     photo_path = Utils.getRealPathFromUri(this, data.getData());
                     mProgress = new ProgressDialog(CaptureActivity.this);
-                    mProgress.setMessage("正在扫描...");
+                    mProgress.setMessage(LangUtil.getString(lang, "scanning"));
                     mProgress.setCancelable(false);
                     mProgress.show();
 
@@ -271,7 +295,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
         playBeepSoundAndVibrate();
         String resultString = result.getText();
         if (TextUtils.isEmpty(resultString)) {
-            Toast.makeText(CaptureActivity.this, "Scan failed!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(CaptureActivity.this, LangUtil.getString(lang, "scan_failed"), Toast.LENGTH_SHORT).show();
             return;
         }
         Intent resultIntent = new Intent();
@@ -385,7 +409,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
             try {
                 boolean isSuccess = CameraManager.get().setFlashLight(!isFlashOn);
                 if (!isSuccess) {
-                    Toast.makeText(CaptureActivity.this, "暂时无法开启闪光灯", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CaptureActivity.this, LangUtil.getString(lang, "unable_turn_on_flash"), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (isFlashOn) {
@@ -412,38 +436,45 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
 
         if (flashState) {
             flashLightIv.setImageResource(R.drawable.ic_open);
-            flashLightTv.setText("关闭闪光灯");
+            flashLightTv.setText(LangUtil.getString(lang, "close_flash_light"));
         } else {
             flashLightIv.setImageResource(R.drawable.ic_close);
-            flashLightTv.setText("打开闪光灯");
+            flashLightTv.setText(LangUtil.getString(lang, "open_flash_light"));
         }
 
     }
-
 
     /**
      * 相册选择图片
      */
     private void selectPhoto() {
-        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE};
-        if (EasyPermissions.hasPermissions(this, perms)) {
+
+        //有权限
+        if (EasyPermissions.hasPermissions(this, curPerms)) {
+            saveFirst(Key_PermissionPermanentlyDenied, true);//恢复默认
             navigatePhoto();
+        }
+        //第一次请求权限
+        else if (!EasyPermissions.hasPermissions(this, curPerms) && getFirst(Key_PermissionFirstApplyFor)) {
+            showFirstPermissionDialog();
+            saveFirst(Key_PermissionFirstApplyFor, false);
         } else {
-            EasyPermissions.requestPermissions(this, "Select QRCode pic need storage permission", 0x666, perms);
+//            requestAction()
+//            requestPermissions();
+            showSelectPhotoHintDialog();//产品需求（不管是拒决还是永久拒决，都直接去系统设置）
         }
     }
 
     private void navigatePhoto() {
         Intent innerIntent = new Intent(Intent.ACTION_GET_CONTENT); // "android.intent.action.GET_CONTENT"
         innerIntent.setType("image/*");
-        Intent wrapperIntent = Intent.createChooser(innerIntent, "Select QRCode pic");
+        Intent wrapperIntent = Intent.createChooser(innerIntent, LangUtil.getString(lang, "select_qrCode_pic"));
         startActivityForResult(wrapperIntent, REQUEST_CODE_SCAN_GALLERY);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         // Forward results to EasyPermissions
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
@@ -451,12 +482,107 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
         if (requestCode == 0x666) {
+            saveFirst(Key_PermissionPermanentlyDenied, true);//恢复默认
             navigatePhoto();
         }
     }
 
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-      Toast.makeText(this, "从相册选择需要读取存储权限", Toast.LENGTH_SHORT).show();
+
+        //永久被拒
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            if (getFirst(Key_PermissionPermanentlyDenied)) {
+                saveFirst(Key_PermissionPermanentlyDenied, false);//恢复默认
+            } else {
+                showSelectPhotoHintDialog();
+            }
+        } else {
+            Toast.makeText(this, LangUtil.getString(lang, "album_permission_tips"), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 第一次申请权限
+     */
+    private void showFirstPermissionDialog() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(LangUtil.getString(lang, "authorize_album_access"))  // 设置对话框标题
+                .setMessage(LangUtil.getString(lang, "authorize_album_access_tips"))  // 设置对话框消息
+                .setNegativeButton(LangUtil.getString(lang, "disagree"), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                    }
+                })
+                .setPositiveButton(LangUtil.getString(lang, "agree"), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+//                        requestAction();
+                        requestPermissions();
+                    }
+                });
+        builder.show();
+    }
+
+    /**
+     * 授权相册提醒
+     */
+    private void showSelectPhotoHintDialog() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(LangUtil.getString(lang, "unable_access_album"))  // 设置对话框标题
+                .setMessage(LangUtil.getString(lang, "enable_album_permissions_tips"))  // 设置对话框消息
+                .setPositiveButton(LangUtil.getString(lang, "go_open"), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    }
+                });
+        builder.show();
+    }
+
+    /**
+     * 请求动作
+     */
+    private void requestAction() {
+
+        //EasyPermissions.requestPermissions(this, "Select QRCode pic need storage permission", 0x666, perms);
+        PermissionRequest.Builder request = new PermissionRequest.Builder(CaptureActivity.this, 0x666, curPerms);
+        request.setRationale("允许访问相册，以便您扫描小票二维码，了解制茶进度及开具发票。");
+        request.setNegativeButtonText("不同意");
+        request.setPositiveButtonText("同意");
+        EasyPermissions.requestPermissions(request.build());
+    }
+
+    /**
+     * 直接申请
+     */
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this, curPerms, 0x666);
+    }
+
+    /**
+     * 获取第一次判断
+     *
+     * @param key
+     * @param isFirst
+     */
+    private void saveFirst(String key, boolean isFirst) {
+        SharedPreferences.Editor note = getSharedPreferences("CaptureActivity", Context.MODE_PRIVATE).edit();
+        note.putBoolean(key, isFirst);
+        note.commit();
+    }
+
+    /**
+     * 获取第一次判断
+     *
+     * @param key
+     * @return
+     */
+    private boolean getFirst(String key) {
+        SharedPreferences read = getSharedPreferences("CaptureActivity", Context.MODE_PRIVATE);
+        return read.getBoolean(key, true);
     }
 }
+
