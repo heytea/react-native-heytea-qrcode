@@ -96,7 +96,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
 
     private boolean isFlashOn = false;
 
-    private String[] curPerms = {Manifest.permission.READ_EXTERNAL_STORAGE};//申请权限
+    private String[] curPerms = {Manifest.permission.CAMERA};//申请权限
 
     //第一次申请权限
     private static String Key_PermissionFirstApplyFor = "firstApplyFor";
@@ -270,6 +270,11 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     @Override
     protected void onPause() {
         super.onPause();
+        if (handler != null) {
+            handler.quitSynchronously();
+            handler = null;
+        }
+        CameraManager.get().closeDriver();
     }
 
     @Override
