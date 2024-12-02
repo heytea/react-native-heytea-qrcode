@@ -65,9 +65,29 @@ public class LangUtil {
         usMap.put("scan_failed", "Scan failed");
         usMap.put("unable_turn_on_flash","暫時無法開啟閃光燈");
 
+        Map<String, String> jaMap = new HashMap<>();
+        jaMap.put("scan_qrcode", "QRコードをスキャン");
+        jaMap.put("open_flash_light", "フラッシュON");
+        jaMap.put("close_flash_light", "フラッシュOFF");
+        jaMap.put("album", "アルバム");
+        jaMap.put("album_permission_tips", "アルバムから選択するにはアクセス権限をオンにする必要があります");
+        jaMap.put("select_qrCode_pic", "スキャンする写真を選択してください");
+        jaMap.put("scanning", "スキャン中…");
+        jaMap.put("authorize_album_access", "アルバムへのアクセスを許可する");
+        jaMap.put("authorize_album_access_tips", "アルバムへのアクセスを許可すると、レシートのQRコードをスキャンすることで製作ステータスを確認したり領収書を受け取ったりすることができます。");
+        jaMap.put("disagree", "同意しない");
+        jaMap.put("agree", "同意する");
+        jaMap.put("unable_access_album", "アルバムへのアクセス権限がありません");
+        jaMap.put("enable_album_permissions_tips", "設定よりアルバムへのアクセスを許可してください。");
+        jaMap.put("go_open", "設定へ");
+        jaMap.put("qr_barcode_scanning", "QRコード/バーコードのスキャン");
+        jaMap.put("scan_failed", "スキャン失敗");
+        jaMap.put("unable_turn_on_flash","フラッシュをONにできません");
+
         langMap.put("zh-CN", zhMap);
         langMap.put("zh-HK", hkMap);
         langMap.put("en-US", usMap);
+        langMap.put("ja-JP", jaMap);
     }
 
     public static String getString(String lang, String key) {
