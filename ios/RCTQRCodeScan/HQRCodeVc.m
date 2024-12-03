@@ -113,6 +113,20 @@
             @"agree":@"同意",
             @"disagree":@"不同意",
         };
+    }else if([lang isEqualToString: @"jp"]){
+         _langDic = @{
+            @"scan":@"スキャン",
+            @"album":@"アルバム",
+            @"notAlbum":@"アルバムを訪問できません",
+            @"notAlbumDes":@"設定にてアルバムの使用権限をオンにしてください",
+            @"open":@"設定へ",
+            @"authAlbum":@"アルバムの使用権限をオンにする",
+            @"authAlbumDes":@"アルバムへのアクセスを許可すると、レシートのQRコードをスキャンすることで製作ステータスを確認したり領収書を受け取ったりすることができます。",
+            @"notQr":@"QRコードが見つかりませんでした",
+            @"scanDes":@"QRコードを枠内に入れると、自動でスキャンされます",
+            @"agree":@"同意する",
+            @"disagree":@"同意しない",
+        };
     }
 }
 
@@ -234,15 +248,17 @@
     if (!_promptLabel) {
         _promptLabel = [[UILabel alloc] init];
         _promptLabel.backgroundColor = [UIColor clearColor];
-        CGFloat promptLabelX = 0;
+        CGFloat promptLabelX = 20;
         CGFloat promptLabelY = 0.73 * self.view.frame.size.height;
-        CGFloat promptLabelW = self.view.frame.size.width;
-        CGFloat promptLabelH = 25;
+        CGFloat promptLabelW = self.view.frame.size.width - 40;
+        CGFloat promptLabelH = 38;
         _promptLabel.frame = CGRectMake(promptLabelX, promptLabelY, promptLabelW, promptLabelH);
         _promptLabel.textAlignment = NSTextAlignmentCenter;
         _promptLabel.font = [UIFont boldSystemFontOfSize:13.0];
         _promptLabel.textColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
         _promptLabel.text = _langDic[@"scanDes"];
+        _promptLabel.numberOfLines = 2;
+
     }
     return _promptLabel;
 }
