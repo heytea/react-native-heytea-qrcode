@@ -471,7 +471,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     }
 
     private void navigatePhoto() {
-        Intent innerIntent = new Intent(Intent.ACTION_GET_CONTENT); // "android.intent.action.GET_CONTENT"
+        Intent innerIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT); // "android.intent.action.GET_CONTENT"
         innerIntent.setType("image/*");
         Intent wrapperIntent = Intent.createChooser(innerIntent, LangUtil.getString(lang, "select_qrCode_pic"));
         startActivityForResult(wrapperIntent, REQUEST_CODE_SCAN_GALLERY);
