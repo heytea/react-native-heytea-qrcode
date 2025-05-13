@@ -1,5 +1,6 @@
 package com.heyteago.qrcode;
 
+import android.annotation.TargetApi;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -11,6 +12,10 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.loader.content.CursorLoader;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 /**
  * package: com.heytea.qrcode
@@ -36,53 +41,82 @@ public class Utils {
      * 适配api19以上,根据uri获取图片的绝对路径
      */
     private static String getRealPathFromUri_AboveApi19(Context context, Uri uri) {
-        if (uri == null) {
-            return null;
-        }
+        final boolean isKitKat = Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT;
+        Log.d("fmt","uri=" + uri);
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
 
-        String path = null;
-        try {
-            if (DocumentsContract.isDocumentUri(context, uri)) {
-                if (isExternalStorageDocument(uri)) {
-                    final String docId = DocumentsContract.getDocumentId(uri);
-                    final String[] split = docId.split(":");
-                    final String type = split[0];
+                if ("primary".equalsIgnoreCase(type)) {
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                } else {
+                    final int splitIndex = docId.indexOf(':', 1);
+                    final String tag = docId.substring(0, splitIndex);
+                    final String path = docId.substring(splitIndex + 1);
 
-                    if ("primary".equalsIgnoreCase(type)) {
-                        path = Environment.getExternalStorageDirectory() + "/" + split[1];
+                    String nonPrimaryVolume = getPathToNonPrimaryVolume(context, tag);
+                    if (nonPrimaryVolume != null) {
+                        String result = nonPrimaryVolume + "/" + path;
+                        File file = new File(result);
+                        if (file.exists() && file.canRead()) {
+                            return result;
+                        }
+                        return null;
                     }
-                } else if (isDownloadsDocument(uri)) {
-                    final String id = DocumentsContract.getDocumentId(uri);
-                    final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
-                    path = getDataColumn(context, contentUri, null, null);
-                } else if (isMediaDocument(uri)) {
-                    final String docId = DocumentsContract.getDocumentId(uri);
-                    final String[] split = docId.split(":");
-                    final String type = split[0];
-
-                    Uri contentUri = null;
-                    if ("image".equals(type)) {
-                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                    } else if ("video".equals(type)) {
-                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                    } else if ("audio".equals(type)) {
-                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                    }
-
-                    final String selection = "_id=?";
-                    final String[] selectionArgs = new String[] { split[1] };
-
-                    path = getDataColumn(context, contentUri, selection, selectionArgs);
                 }
-            } else if ("content".equalsIgnoreCase(uri.getScheme())) {
-                path = getDataColumn(context, uri, null, null);
-            } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-                path = uri.getPath();
             }
-        } catch (Exception e) {
-            Log.e("Util", "Error getting path from URI: " + uri, e);
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
         }
-        return path;
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+    private static boolean isGooglePhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 
     /**
@@ -119,19 +153,30 @@ public class Utils {
 
     private static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
         Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = { column };
+        final String[] projection = {
+                MediaStore.MediaColumns.DATA,
+                MediaStore.MediaColumns.DISPLAY_NAME,
+        };
 
         try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
             if (cursor != null && cursor.moveToFirst()) {
-                final int index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(index);
+                // Fall back to writing to file if _data column does not exist
+                final int index = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
+                String path = index > -1 ? cursor.getString(index) : null;
+                if (path != null) {
+                    return cursor.getString(index);
+                } else {
+                    final int indexDisplayName = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+                    String fileName = cursor.getString(indexDisplayName);
+                    File fileWritten = writeToFile(context, fileName, uri);
+                    return fileWritten.getAbsolutePath();
+                }
             }
         } finally {
-            if (cursor != null) {
+            if (cursor != null)
                 cursor.close();
-            }
         }
         return null;
     }
@@ -147,5 +192,57 @@ public class Utils {
     private static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private static String getPathToNonPrimaryVolume(Context context, String tag) {
+        File[] volumes = context.getExternalCacheDirs();
+        if (volumes != null) {
+            for (File volume : volumes) {
+                if (volume != null) {
+                    String path = volume.getAbsolutePath();
+                    if (path != null) {
+                        int index = path.indexOf(tag);
+                        if (index != -1) {
+                            return path.substring(0, index) + tag;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * If an image/video has been selected from a cloud storage, this method
+     * should be call to download the file in the cache folder.
+     *
+     * @param context The context
+     * @param fileName donwloaded file's name
+     * @param uri file's URI
+     * @return file that has been written
+     */
+    private static File writeToFile(Context context, String fileName, Uri uri) {
+        String tmpDir = context.getCacheDir() + "/react-native-image-crop-picker";
+        Boolean created = new File(tmpDir).mkdir();
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
+        File path = new File(tmpDir);
+        File file = new File(path, fileName);
+        try {
+            FileOutputStream oos = new FileOutputStream(file);
+            byte[] buf = new byte[8192];
+            InputStream is = context.getContentResolver().openInputStream(uri);
+            int c = 0;
+            while ((c = is.read(buf, 0, buf.length)) > 0) {
+                oos.write(buf, 0, c);
+                oos.flush();
+            }
+            oos.close();
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
+
 }
 
