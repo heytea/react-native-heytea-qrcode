@@ -38,6 +38,7 @@ import com.heyteago.qrcode.camera.CameraManager;
 
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 
@@ -82,6 +83,7 @@ public final class ViewfinderView extends View {
 
     private Collection<ResultPoint> possibleResultPoints;
     private Collection<ResultPoint> lastPossibleResultPoints;
+    private final Object pointsLock = new Object();
 
     // This constructor is used when the class is built from an XML resource.
     public ViewfinderView(Context context, AttributeSet attrs) {
@@ -103,7 +105,7 @@ public final class ViewfinderView extends View {
         paint = new Paint();
         paint.setAntiAlias(true);
         scannerAlpha = 0;
-        possibleResultPoints = new HashSet<ResultPoint>(5);
+        possibleResultPoints = Collections.synchronizedSet(new HashSet<ResultPoint>(5));
 
 
     }
@@ -139,24 +141,38 @@ public final class ViewfinderView extends View {
             // Draw a red "laser scanner" line through the middle to show decoding is active
             drawLaserScanner(canvas, frame);
 
-            Collection<ResultPoint> currentPossible = possibleResultPoints;
-            Collection<ResultPoint> currentLast = lastPossibleResultPoints;
-            if (currentPossible.isEmpty()) {
-                lastPossibleResultPoints = null;
-            } else {
-                possibleResultPoints = new HashSet<ResultPoint>(5);
-                lastPossibleResultPoints = currentPossible;
-                paint.setAlpha(OPAQUE);
-                paint.setColor(resultPointColor);
-                for (ResultPoint point : currentPossible) {
-                    canvas.drawCircle(frame.left + point.getX(), frame.top + point.getY(), 6.0f, paint);
+            Collection<ResultPoint> currentPossible;
+            Collection<ResultPoint> currentLast;
+            synchronized (pointsLock) {
+                currentPossible = possibleResultPoints;
+                currentLast = lastPossibleResultPoints;
+                if (currentPossible == null || currentPossible.isEmpty()) {
+                    lastPossibleResultPoints = null;
+                } else {
+                    possibleResultPoints = Collections.synchronizedSet(new HashSet<ResultPoint>(5));
+                    lastPossibleResultPoints = currentPossible;
                 }
             }
+            // 绘制当前点
+            synchronized (pointsLock) {
+                if (currentPossible != null && !currentPossible.isEmpty()) {
+                    paint.setAlpha(OPAQUE);
+                    paint.setColor(resultPointColor);
+                    for (ResultPoint point : currentPossible) {
+                        if (point != null) {
+                            canvas.drawCircle(frame.left + point.getX(), frame.top + point.getY(), 6.0f, paint);
+                        }
+                    }
+                }
+            }
+            // 绘制上一次的点
             if (currentLast != null) {
                 paint.setAlpha(OPAQUE / 2);
                 paint.setColor(resultPointColor);
                 for (ResultPoint point : currentLast) {
-                    canvas.drawCircle(frame.left + point.getX(), frame.top + point.getY(), 3.0f, paint);
+                    if (point != null) {
+                        canvas.drawCircle(frame.left + point.getX(), frame.top + point.getY(), 3.0f, paint);
+                    }
                 }
             }
 
@@ -285,7 +301,11 @@ public final class ViewfinderView extends View {
     }
 
     public void addPossibleResultPoint(ResultPoint point) {
-        possibleResultPoints.add(point);
+        synchronized (pointsLock) {
+            if (possibleResultPoints != null && point != null) {
+                possibleResultPoints.add(point);
+            }
+        }
     }
 
 }

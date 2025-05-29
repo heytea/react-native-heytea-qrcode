@@ -23,6 +23,7 @@ import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.io.IOException;
@@ -203,8 +204,12 @@ public final class CameraManager {
   public void requestAutoFocus(Handler handler, int message) {
     if (camera != null && previewing) {
       autoFocusCallback.setHandler(handler, message);
-      //Log.d(TAG, "Requesting auto-focus callback");
-      camera.autoFocus(autoFocusCallback);
+      try {
+        camera.autoFocus(autoFocusCallback);
+      } catch (Exception e) {
+        Log.w(TAG, "Unexpected exception while focusing", e);
+        // 可选：可以在这里延迟重试，避免频繁报错
+      }
     }
   }
 

@@ -437,7 +437,7 @@ public class CaptureActivity extends AppCompatActivity implements Callback, View
     /**
      * @param flashState 切换闪光灯图片
      */
-    public void switchFlashImg(Boolean flashState) {
+    public void switchFlashImg(boolean flashState) {
 
         if (flashState) {
             flashLightIv.setImageResource(R.drawable.ic_open);
