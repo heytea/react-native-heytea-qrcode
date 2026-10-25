@@ -44,7 +44,7 @@ public class LangUtil {
         hkMap.put("go_open", "去開啟");
         hkMap.put("qr_barcode_scanning", "二維碼/條碼掃描");
         hkMap.put("scan_failed", "掃碼失敗");
-        hkMap.put("unable_turn_on_flash","Unable to turn on flash temporarily");
+        hkMap.put("unable_turn_on_flash","暫時無法開啟閃光燈");
 
         Map<String, String> usMap = new HashMap<>();
         usMap.put("scan_qrcode", "Scan QR code");
@@ -63,7 +63,7 @@ public class LangUtil {
         usMap.put("go_open", "Go to enable");
         usMap.put("qr_barcode_scanning", "QR code/barcode scanning");
         usMap.put("scan_failed", "Scan failed");
-        usMap.put("unable_turn_on_flash","暫時無法開啟閃光燈");
+        usMap.put("unable_turn_on_flash","Unable to turn on flash temporarily");
 
         Map<String, String> jaMap = new HashMap<>();
         jaMap.put("scan_qrcode", "QRコードをスキャン");
